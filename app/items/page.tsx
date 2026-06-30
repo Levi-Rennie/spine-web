@@ -1,3 +1,5 @@
+import LoanSearch from "./LoanSearch";
+
 type Loan = {
   loan_id: number;
   member_id: number;
@@ -22,14 +24,7 @@ export default async function ItemsPage() {
   return (
     <main className="p-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Loans</h1>
-      <ul className="space-y-2">
-        {items.map((loan) => (
-          <li key={loan.loan_id} className="border rounded p-3">
-            <p className="font-medium">{loan.book_title}</p>
-            <p className="text-sm text-zinc-500">{loan.full_name} · due {loan.due_on}</p>
-          </li>
-        ))}
-      </ul>
+      <LoanSearch loans={items} />
     </main>
   );
 }
