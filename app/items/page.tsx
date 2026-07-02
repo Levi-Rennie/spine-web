@@ -20,7 +20,7 @@ async function getItems(): Promise<Loan[]> {
 export default async function ItemsPage() {
   const items = await getItems();
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
+    <main className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
       <div className="max-w-3xl mx-auto px-6 py-12">
         <header className="mb-10 border-b border-zinc-800 pb-6">
           <h1 className="text-4xl font-bold tracking-tight">
@@ -28,8 +28,10 @@ export default async function ItemsPage() {
           </h1>
           <p className="text-sm text-zinc-500 mt-1">Library loans</p>
         </header>
-        <AddItemForm />
-        <LoanSearch loans={items} />
+        <div className="space-y-10">
+          <AddItemForm />
+          <LoanSearch loans={items} />
+        </div>
       </div>
     </main>
   );

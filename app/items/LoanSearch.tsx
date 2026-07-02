@@ -37,24 +37,39 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
         {filtered.length} {filtered.length === 1 ? "loan" : "loans"}
       </p>
       <ul className="space-y-2">
-        {filtered.map((loan) => (
-          <li
-            key={loan.loan_id}
-            className="group border border-zinc-800 rounded-lg p-4 hover:border-emerald-400/50 hover:bg-zinc-900/50 transition-all"
-          >
-            <div className="flex items-baseline justify-between gap-4">
-              <p className="font-medium text-zinc-100 group-hover:text-emerald-400 transition-colors">
-                {loan.book_title}
-              </p>
-              <span className="text-xs text-zinc-600 font-mono shrink-0">
-                #{loan.loan_id}
-              </span>
-            </div>
-            <p className="text-sm text-zinc-500 mt-1">
-              {loan.full_name} · due {formatDate(loan.due_on)}
-            </p>
+        {filtered.length === 0 ? (
+          <li className="border border-zinc-800 border-dashed rounded-lg p-8 text-center text-sm text-zinc-600">
+            No loans match "{query}"
           </li>
-        ))}
+        ) : (
+          filtered.map((loan) => (
+            <li
+              key={loan.loan_id}
+              className="group border border-zinc-800 rounded-lg p-4 hover:border-emerald-400/50 hover:bg-zinc-900/50 transition-all"
+            >
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="font-medium text-zinc-100 group-hover:text-emerald-400 transition-colors">
+                  {loan.book_title}
+                </p>
+                <span className="text-xs text-zinc-600 font-mono shrink-0">
+                  #{loan.loan_id}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-500 mt-1">
+                {loan.full_name} · due{" "}
+                <span
+                  className={
+                    new Date(loan.due_on) < new Date()
+                      ? "text-red-400"
+                      : "text-zinc-500"
+                  }
+                >
+                  {formatDate(loan.due_on)}
+                </span>
+              </p>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );
