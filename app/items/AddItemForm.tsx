@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createLoanSchema } from '../../lib/schemas';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createLoanSchema } from "../../lib/schemas";
+
+const inputClass =
+  "bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-colors";
 
 export default function AddItemForm() {
-  const [memberId, setMemberId] = useState('');
-  const [bookTitle, setBookTitle] = useState('');
-  const [borrowedOn, setBorrowedOn] = useState('');
-  const [dueOn, setDueOn] = useState('');
+  const [memberId, setMemberId] = useState("");
+  const [bookTitle, setBookTitle] = useState("");
+  const [borrowedOn, setBorrowedOn] = useState("");
+  const [dueOn, setDueOn] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const router = useRouter();
 
@@ -22,64 +25,84 @@ export default function AddItemForm() {
 
     const parsed = createLoanSchema.safeParse(candidate);
     if (!parsed.success) {
-      setErrors(parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`));
+      setErrors(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
       return;
     }
     setErrors([]);
 
-    const res = await fetch('http://127.0.0.1:3000/items', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("http://127.0.0.1:3000/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),
     });
 
-if (!res.ok) {
+    if (!res.ok) {
       const body = await res.json();
       if (Array.isArray(body.message)) {
-        setErrors(body.message.map((i: { path: string[]; message: string }) =>
-          `${i.path.join('.')}: ${i.message}`
-        ));
+        setErrors(
+          body.message.map(
+            (i: { path: string[]; message: string }) =>
+              `${i.path.join(".")}: ${i.message}`
+          )
+        );
       } else {
-        setErrors([body.message ?? 'Something went wrong']);
+        setErrors([body.message ?? "Something went wrong"]);
       }
       return;
     }
 
-    setMemberId('');
-    setBookTitle('');
-    setBorrowedOn('');
-    setDueOn('');
+    setMemberId("");
+    setBookTitle("");
+    setBorrowedOn("");
+    setDueOn("");
     router.refresh();
   }
 
   return (
-    <div>
-      <input
-        value={memberId}
-        onChange={(e) => setMemberId(e.target.value)}
-        placeholder="Member ID"
-        type="number"
-      />
-      <input
-        value={bookTitle}
-        onChange={(e) => setBookTitle(e.target.value)}
-        placeholder="Book title"
-      />
-      <input
-        value={borrowedOn}
-        onChange={(e) => setBorrowedOn(e.target.value)}
-        type="date"
-      />
-      <input
-        value={dueOn}
-        onChange={(e) => setDueOn(e.target.value)}
-        type="date"
-      />
-      <button onClick={handleSubmit}>Add loan</button>
+    <div className="mb-10 bg-zinc-900/50 border border-zinc-800 rounded-lg p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">
+        Add loan
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input
+          value={memberId}
+          onChange={(e) => setMemberId(e.target.value)}
+          placeholder="Member ID"
+          type="number"
+          className={inputClass}
+        />
+        <input
+          value={bookTitle}
+          onChange={(e) => setBookTitle(e.target.value)}
+          placeholder="Book title"
+          className={inputClass}
+        />
+        <input
+          value={borrowedOn}
+          onChange={(e) => setBorrowedOn(e.target.value)}
+          type="date"
+          className={inputClass}
+        />
+        <input
+          value={dueOn}
+          onChange={(e) => setDueOn(e.target.value)}
+          type="date"
+          className={inputClass}
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        className="mt-4 bg-emerald-400 text-zinc-950 font-medium text-sm px-5 py-2 rounded-md hover:bg-emerald-300 transition-colors"
+      >
+        Add loan
+      </button>
       {errors.length > 0 && (
-        <ul>
+        <ul className="mt-4 space-y-1">
           {errors.map((err) => (
-            <li key={err} style={{ color: 'red' }}>{err}</li>
+            <li key={err} className="text-sm text-red-400 flex items-start gap-2">
+              <span className="text-red-500 mt-0.5">✕</span>
+              {err}
+            </li>
           ))}
         </ul>
       )}
