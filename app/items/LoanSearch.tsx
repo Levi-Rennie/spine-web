@@ -15,8 +15,28 @@ type Loan = {
 
 export default function LoanSearch({ loans }: { loans: Loan[] }) {
   const [query, setQuery] = useState("");
+  const [items, setItems] = useState<Loan[]>(loans);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const filtered = loans.filter((loan) => {
+  async function handleDelete(loanId: number) {
+    setDeletingId(loanId);
+    try {
+      const res = await fetch(`http://127.0.0.1:3000/items/${loanId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error(`Delete failed with status ${res.status}`);
+      }
+      setItems((prev) => prev.filter((loan) => loan.loan_id !== loanId));
+    } catch (err) {
+      console.error(err);
+      alert("Could not delete the loan. Is the API running?");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const filtered = items.filter((loan) => {
     const q = query.toLowerCase();
     return (
       loan.book_title.toLowerCase().includes(q) ||
@@ -26,7 +46,7 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
 
   return (
     <div>
-      {loans.length === 0 ? (
+      {items.length === 0 ? (
         <div className="border border-zinc-800 border-dashed rounded-lg p-10 text-center">
           <p className="text-zinc-300 font-medium">No items yet</p>
           <p className="text-sm text-zinc-600 mt-1">
@@ -60,9 +80,18 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
                     <p className="font-medium text-zinc-100 group-hover:text-emerald-400 transition-colors">
                       {loan.book_title}
                     </p>
-                    <span className="text-xs text-zinc-600 font-mono shrink-0">
-                      #{loan.loan_id}
-                    </span>
+                    <div className="flex items-baseline gap-3 shrink-0">
+                      <span className="text-xs text-zinc-600 font-mono">
+                        #{loan.loan_id}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(loan.loan_id)}
+                        disabled={deletingId === loan.loan_id}
+                        className="text-xs text-zinc-600 hover:text-red-400 border border-zinc-800 hover:border-red-400/50 rounded px-2 py-1 transition-colors disabled:opacity-50"
+                      >
+                        {deletingId === loan.loan_id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </div>
                   <p className="text-sm text-zinc-500 mt-1">
                     {loan.full_name} · due{" "}
