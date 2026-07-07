@@ -6,5 +6,8 @@ export const createLoanSchema = z.object({
   borrowed_on: z.string().date(),
   due_on: z.string().date(),
 });
-
+export const editLoanSchema = z.object({
+  due_on: z.string().date(),
+});
 export type CreateLoan = z.infer<typeof createLoanSchema>;
+export type EditLoan = z.infer<typeof editLoanSchema>;
