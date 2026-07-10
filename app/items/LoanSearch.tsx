@@ -30,6 +30,36 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
   const [draftDate, setDraftDate] = useState("");
   const [savingId, setSavingId] = useState<number | null>(null);
   const [returningId, setReturningId] = useState<number | null>(null);
+  const [unreturningId, setUnreturningId] = useState<number | null>(null);
+
+  async function handleUnreturn(loanId: number) {
+    if (!confirm("Undo the return? This loan will be marked as still out.")) {
+      return;
+    }
+    setUnreturningId(loanId);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:3000/items/${loanId}/return`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) {
+        throw new Error(`Undo return failed with status ${res.status}`);
+      }
+      const updated = await res.json();
+      setItems((prev) =>
+        prev.map((loan) =>
+          loan.loan_id === loanId
+            ? { ...loan, returned_on: updated.returned_on }
+            : loan,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Could not undo the return. Is the API running?");
+    } finally {
+      setUnreturningId(null);
+    }
+  }
 
   async function handleReturn(loanId: number) {
     if (!confirm("Mark this loan as returned? It will stay in history.")) {
@@ -191,6 +221,17 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
                           {returningId === loan.loan_id
                             ? "Returning..."
                             : "Mark returned"}
+                        </button>
+                      )}
+                      {isReturned && (
+                        <button
+                          onClick={() => handleUnreturn(loan.loan_id)}
+                          disabled={unreturningId === loan.loan_id}
+                          className="text-xs text-zinc-600 hover:text-amber-400 border border-zinc-800 hover:border-amber-400/50 rounded px-2 py-1 transition-colors disabled:opacity-50"
+                        >
+                          {unreturningId === loan.loan_id
+                            ? "Undoing..."
+                            : "Undo return"}
                         </button>
                       )}
                       <button
