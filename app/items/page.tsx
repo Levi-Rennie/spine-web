@@ -7,6 +7,7 @@ type Loan = {
   book_title: string;
   borrowed_on: string;
   due_on: string;
+  returned_on: string | null;
   full_name: string;
   email: string;
 };

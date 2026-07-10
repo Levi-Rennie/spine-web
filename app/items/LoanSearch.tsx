@@ -10,6 +10,7 @@ type Loan = {
   book_title: string;
   borrowed_on: string;
   due_on: string;
+  returned_on: string | null;
   full_name: string;
   email: string;
 };
@@ -28,6 +29,36 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draftDate, setDraftDate] = useState("");
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [returningId, setReturningId] = useState<number | null>(null);
+
+  async function handleReturn(loanId: number) {
+    if (!confirm("Mark this loan as returned? It will stay in history.")) {
+      return;
+    }
+    setReturningId(loanId);
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:3000/items/${loanId}/return`,
+        { method: "PATCH" },
+      );
+      if (!res.ok) {
+        throw new Error(`Return failed with status ${res.status}`);
+      }
+      const updated = await res.json();
+      setItems((prev) =>
+        prev.map((loan) =>
+          loan.loan_id === loanId
+            ? { ...loan, returned_on: updated.returned_on }
+            : loan,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Could not mark the loan as returned. Is the API running?");
+    } finally {
+      setReturningId(null);
+    }
+  }
 
   async function handleDelete(loanId: number) {
     setDeletingId(loanId);
@@ -122,13 +153,17 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
           <ul className="space-y-2">
             {filtered.length === 0 ? (
               <li className="border border-zinc-800 border-dashed rounded-lg p-8 text-center text-sm text-zinc-600">
-                No loans match "{query}"
+                No loans match &quot;{query}&quot;
               </li>
             ) : (
-              filtered.map((loan) => (
+              filtered.map((loan) => {
+                const isReturned = loan.returned_on !== null;
+                return (
                 <li
                   key={loan.loan_id}
-                  className="group border border-zinc-800 rounded-lg p-4 hover:border-emerald-400/50 hover:bg-zinc-900/50 transition-all"
+                  className={`group border border-zinc-800 rounded-lg p-4 hover:border-emerald-400/50 hover:bg-zinc-900/50 transition-all ${
+                    isReturned ? "opacity-60" : ""
+                  }`}
                 >
                   <div className="flex items-baseline justify-between gap-4">
                     <p className="font-medium text-zinc-100 group-hover:text-emerald-400 transition-colors">
@@ -138,13 +173,26 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
                       <span className="text-xs text-zinc-600 font-mono">
                         #{loan.loan_id}
                       </span>
-                      <button
-                        onClick={() => startEdit(loan)}
-                        disabled={editingId === loan.loan_id}
-                        className="text-xs text-zinc-600 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-400/50 rounded px-2 py-1 transition-colors disabled:opacity-50"
-                      >
-                        Edit
-                      </button>
+                      {!isReturned && (
+                        <button
+                          onClick={() => startEdit(loan)}
+                          disabled={editingId === loan.loan_id}
+                          className="text-xs text-zinc-600 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-400/50 rounded px-2 py-1 transition-colors disabled:opacity-50"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {!isReturned && (
+                        <button
+                          onClick={() => handleReturn(loan.loan_id)}
+                          disabled={returningId === loan.loan_id}
+                          className="text-xs text-zinc-600 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-400/50 rounded px-2 py-1 transition-colors disabled:opacity-50"
+                        >
+                          {returningId === loan.loan_id
+                            ? "Returning..."
+                            : "Mark returned"}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(loan.loan_id)}
                         disabled={deletingId === loan.loan_id}
@@ -185,17 +233,24 @@ export default function LoanSearch({ loans }: { loans: Loan[] }) {
                       {loan.full_name} · due{" "}
                       <span
                         className={
-                          new Date(loan.due_on) < new Date()
+                          !isReturned && new Date(loan.due_on) < new Date()
                             ? "text-red-400"
                             : "text-zinc-500"
                         }
                       >
                         {formatDate(loan.due_on)}
                       </span>
+                      {loan.returned_on && (
+                        <span className="text-emerald-400">
+                          {" "}
+                          · returned {formatDate(loan.returned_on)}
+                        </span>
+                      )}
                     </p>
                   )}
                 </li>
-              ))
+                );
+              })
             )}
           </ul>
         </>
